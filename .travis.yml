@@ -18,9 +18,7 @@ matrix:
   - elixir: 1.1.1
     otp_release: 17.5
 env:
-- MIX_ENV=test
-- COVERALLS_ELIXIR_VERSION=1.5.2
-- COVERALLS_OTP_RELEASE=20.1
+- MIX_ENV=test COVERALLS_ELIXIR_VERSION=1.5.2 COVERALLS_OTP_RELEASE=20.1
 script:
 - mix test
 after_script:
