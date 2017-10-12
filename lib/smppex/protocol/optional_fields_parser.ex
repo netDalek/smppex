@@ -49,17 +49,16 @@ defmodule SMPPEX.Protocol.OptionalFieldsParser do
   end
 
   defp parse_known_tlv(value, {:octet_string, size}) when is_integer(size) do
-    case value do
-      << _ :: binary-size(size) >> -> {:ok, value}
+    case Unpack.octet_string(value, size) do
+      {:ok, value, <<>>} -> {:ok, value}
       _ -> {:error, "Invalid octet_string"}
     end
   end
-
-  defp parse_known_tlv(value, {:octet_string, {from, to}}) do
-    if byte_size(value) >= from and byte_size(value) <= to do
-      {:ok, value}
-    else
-      {:error, "Invalid octet_string"}
+  
+  defp parse_known_tlv(value, {:octet_string, {from, to}}) when is_integer(from) and is_integer(to) do
+    case Unpack.octet_string(value, {from, to}) do
+      {:ok, value} -> {:ok, value}
+      _ -> {:error, "Invalid octet_string"}
     end
   end
 

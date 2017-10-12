@@ -49,10 +49,16 @@ defmodule SMPPEX.Protocol.UnpackTest do
     assert {:error, _} = Unpack.c_octet_string(<<"01234F6789", 0, "c">>, {:max, 11}, :dec)
   end
 
-  test "octet_string" do
+  test "octet_string: fixed" do
     assert {:ok, "", "123"} == Unpack.octet_string("123", 0)
     assert {:ok, "12", "3"} == Unpack.octet_string("123", 2)
     assert {:error, _} = Unpack.octet_string("123", 4)
+  end
+
+  test "octet_string: var" do
+    assert {:ok, "123"} == Unpack.octet_string("123", {0, 100})
+    assert {:ok, "123"} == Unpack.octet_string("123" <> <<0>>, {0, 100})
+    assert {:error, _} = Unpack.octet_string("123", {0,1})
   end
 
   test "tlv" do

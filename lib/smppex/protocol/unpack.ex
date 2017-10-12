@@ -9,6 +9,7 @@ defmodule SMPPEX.Protocol.Unpack do
   @invalid_c_octet_string_format "C-Octet String: wrong format"
   @invalid_fixed_c_octet_string "C-Octet String(fixed): invalid"
   @invalid_c_octet_string_no_terminator "C-Octet String(var): null terminator not found"
+  @invalid_octet_string_length_out_of_range "Octet String(var): length out of range"
 
 
   @type unpack_error_result :: {:error, any}
@@ -67,11 +68,20 @@ defmodule SMPPEX.Protocol.Unpack do
   defp valid_kind?(str, :dec), do: Helpers.dec?(str)
   defp valid_kind?(str, :hex), do: Helpers.hex?(str)
 
-  @spec octet_string(binary, non_neg_integer) :: unpack_error_result | {:ok, binary, binary}
+  @spec octet_string(binary, non_neg_integer) :: unpack_error_result | {:ok, binary, binary} | {:ok, binary}
 
-  def octet_string(bin, len) when len >= 0 and is_binary(bin) do
+  def octet_string(bin, {from, to}) when
+    is_integer(from) and is_integer(to) and from >= 0 and to >= 0 and is_binary(bin) do
+
+    if byte_size(bin) >= from and byte_size(bin) <= to do
+      {:ok, remove_optional_null(bin)}
+    else
+      {:error, @invalid_octet_string_length_out_of_range}
+    end
+  end
+  def octet_string(bin, len) when is_integer(len) and len >= 0 and is_binary(bin) do
     case bin do
-      << str :: binary-size(len), rest :: binary >> -> {:ok, str, rest}
+      << str :: binary-size(len), rest :: binary >> -> {:ok, remove_optional_null(str), rest}
       _ -> {:error, @unexpected_data_end}
     end
   end
@@ -88,6 +98,14 @@ defmodule SMPPEX.Protocol.Unpack do
     case value_and_rest do
       << value :: binary-size(len), rest :: binary >> -> {:ok, {tag, value}, rest}
       _ -> {:error, @unexpected_data_end}
+    end
+  end
+
+  def remove_optional_null(bin) do
+    len = byte_size(bin) - 1
+    case bin do
+      <<prefix :: binary-size(len), @null :: size(8)>> -> prefix
+      _ -> bin
     end
   end
 
