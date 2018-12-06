@@ -48,4 +48,9 @@ defmodule SMPPEX.Pdu.OserlTest do
     pdu = Oserl.from({1, 2, 3, [{:network_error_code, {:network_error_code, 1, 2}}]})
     assert <<1, 0, 2>> == Pdu.optional_field(pdu, :network_error_code)
   end
+
+  test "oserl its_session_info record" do
+    pdu = Oserl.from({1, 2, 3, [{:its_session_info, {:its_session_info, 1, 2}}]})
+    assert <<1, 2>> == Pdu.field(pdu, :its_session_info)
+  end
 end
